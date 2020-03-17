@@ -115,17 +115,10 @@ private extension HotKeyCenter {
         }, 1, &pressedEventType, nil, nil)
 
         // Press Modifiers Event
-        let mask = CGEventMask((1 << CGEventType.flagsChanged.rawValue))
-        let event = CGEvent.tapCreate(tap: .cghidEventTap,
-                                     place: .headInsertEventTap,
-                                     options: .listenOnly,
-                                     eventsOfInterest: mask,
-                                     callback: { (_, _, event, _) in return HotKeyCenter.shared.sendModifiersEvent(event) },
-                                     userInfo: nil)
-        if event == nil { return }
-        let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, event!, 0)
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), source, CFRunLoopMode.commonModes)
-        CGEvent.tapEnable(tap: event!, enable: true)
+        NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { (event:NSEvent) -> NSEvent? in
+            _ = HotKeyCenter.shared.sendModifiersEvent(event.cgEvent!)
+            return event
+        }
     }
 
     func sendCarbonEvent(_ event: EventRef) -> OSStatus {
